@@ -164,11 +164,7 @@ def shiftrows(element):
             temp[i,(Nb-shift(r,Nb)+j)%Nb]= element[r,j]
     element=np.copy(temp)
 
-    #temp= element[1,0]; element[1,0:3]= element[1,1:4]; element[1,3]= temp
-    #temp= element[2,0:2].copy(); element[2,0:2]= element[2,2:4]; element[2,2:4]= temp
-    #temp= element[3,3]; element[3,1:4]= element[3,0:3]; element[3,0]= temp
     
-
 def multiplication_for_matrix(X,Y):
     # iterate through rows of X
     rough= np.zeros((len(X),len(Y[0])),dtype= np.uint8)
