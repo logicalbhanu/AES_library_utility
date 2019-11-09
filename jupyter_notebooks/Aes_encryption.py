@@ -49,9 +49,11 @@ sbox =  [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
 s_box=np.array(sbox).reshape(16,16)                              
                                          # converting the sbox list into a numpy array of 16x16
 
-# most of the lambdas are here
+# most of the lambdas and one liner functions are here
 
 shift = lambda r,Nb: (1 if r== 1 else (2 if r == 2 else (3 if r== 3 else (0 if r==0 else None)))) if Nb == 4 else None
+
+character_conversion=np.vectorize(chr)   # this is to conver a numpy uint8 array to its unicode containing numpy array
 
 # methods are all here
 # comment for any line of code is listed just below that line at a suitable distance
@@ -108,7 +110,7 @@ def input_text_key(filename):
                                                                         # note that 'map' can work only once, so store it result in a varaiable
     state_array= np.array(result, dtype=np.uint8)                  
                                                                         # store them into utf-8 integer encoding in a variable of 8-bit integer.
-                                                                        
+
     length= len(state_array)
     if length >= 16:
         state_array= state_array[:16]
@@ -213,23 +215,35 @@ def final_encryption(cipher_input,expanded_key):
 
     return cipher_input
 
+def storeOutput(filename,state_array_out):
+    char_written_length=0
+    with open('output_demo.txt','w',encoding='utf-8') as f:
+        for i in character_conversion(state_array_out):
+            char_written_length=char_written_length+len(''.join(np.ravel(i,order='F')))
+            f.write(''.join(np.ravel(i,order='F')))
+    
+    return char_written_length
+        
 
 
 # code for creation of state array and performing encryption on all blocks of the cipher created
 def creation_everything():
     filename= input("enter the name of the file with path that need to be encrypted")
     encryption_key= input("enter the name of the key file with path that need to encrypt the file, max length of file is 16 characters")
+    OutFileName= input("enter the name of the output file with path that is used to store the encrypted output")
     state_array= input_text(filename)
     original_key= input_text_key(encryption_key)
     expanded_key= keyexpansion(np.copy(original_key))
     state_array_out= np.zeros(state_array.shape,dtype=np.uint8)
 
-                                        # all the above variables has been marked as global because they need to be available in other functions too
-
+                                        
     for index,block in enumerate(state_array):
         state_array_out[index]= final_encryption(np.copy(block),expanded_key)
-    print(state_array_out)
+    
+    total_char_wrote= storeOutput(OutFileName,np.copy(state_array_out))
+    print(total_char_wrote)
 
+    
 if __name__=='__main__':
 
     creation_everything()
