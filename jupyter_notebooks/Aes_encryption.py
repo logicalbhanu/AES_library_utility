@@ -58,9 +58,12 @@ shift = lambda r,Nb: (1 if r== 1 else (2 if r == 2 else (3 if r== 3 else (0 if r
 
 def input_text(filename):
     
-    state_array= np.fromfile(filename, dtype=np.uint8)                  
-                                                                        # this shows ('b'=np.byte) the byte data type and store them
-                                                                        #  into utf-8 integer encoding in a variable of 8-bit integer.
+    with open(filename,'r',encoding='utf-8') as f:
+        result=list(map(ord,f.read()))
+                                                                        # note that 'map' can work only once, so store it result in a varaiable
+    state_array= np.array(result, dtype=np.uint8)                  
+                                                                        # store them into utf-8 integer encoding in a variable of 8-bit integer.
+    
     length= len(state_array)
     padding= length%16
     state_array= np.append(state_array,np.zeros(16-padding).astype(np.uint8)) 
@@ -100,9 +103,12 @@ def byte_substitution(state_array_copy):
 
 def input_text_key(filename):
     
-    state_array= np.fromfile(filename, dtype=np.uint8)                  
-                                                                # this shows ('b'=np.byte) the byte data type and store them
-                                                                # into utf-8 integer encoding in a variable of 8-bit integer.
+    with open(filename,'r',encoding='utf-8') as f:
+        result=list(map(ord,f.read()))
+                                                                        # note that 'map' can work only once, so store it result in a varaiable
+    state_array= np.array(result, dtype=np.uint8)                  
+                                                                        # store them into utf-8 integer encoding in a variable of 8-bit integer.
+                                                                        
     length= len(state_array)
     if length >= 16:
         state_array= state_array[:16]
