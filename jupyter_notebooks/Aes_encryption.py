@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import Aes_decryption as decryp
 # To use other file variable use the way mentioned below rather than anyother way else
 # import file1
 
@@ -53,8 +54,6 @@ s_box=np.array(sbox).reshape(16,16)
 
 shift = lambda r,Nb: (1 if r== 1 else (2 if r == 2 else (3 if r== 3 else (0 if r==0 else None)))) if Nb == 4 else None
 
-character_conversion=np.vectorize(chr)   # this is to conver a numpy uint8 array to its unicode containing numpy array
-
 # methods are all here
 # comment for any line of code is listed just below that line at a suitable distance
 
@@ -68,7 +67,7 @@ def input_text(filename):
     
     length= len(state_array)
     padding= length%16
-    state_array= np.append(state_array,np.zeros(16-padding).astype(np.uint8)) 
+    state_array= np.append(state_array,np.zeros((16-padding)%16).astype(np.uint8)) 
                                                                         # since we don't adding axis here therefore the values of the 
                                                                         # added array will be flattened before use and would then be merged. 
     
@@ -194,6 +193,16 @@ def multiplication_for_matrix(X,Y):
 def add_round_key(cipher,round_no,expanded_key):
     cipher[:,:]= cipher[:,:]^expanded_key[round_no,:,:]
     
+def storeOutput(filename,state_array_out):
+    char_written_length=0
+    rowwritten=''
+    with open(filename,'w',encoding='utf-8') as f:
+        for i in state_array_out:
+            rowwritten=' '.join(map(str, np.ravel(i)))
+            char_written_length=char_written_length+len(rowwritten.split())
+            f.write(rowwritten+' ')
+    
+    return char_written_length
 
 # only the block of cipher should be passed that need to be ecrypted and not the whole cipher,containing all the blocks of the cipher
 def final_encryption(cipher_input,expanded_key):
@@ -215,17 +224,6 @@ def final_encryption(cipher_input,expanded_key):
 
     return cipher_input
 
-def storeOutput(filename,state_array_out):
-    char_written_length=0
-    with open('output_demo.txt','w',encoding='utf-8') as f:
-        for i in character_conversion(state_array_out):
-            char_written_length=char_written_length+len(''.join(np.ravel(i,order='F')))
-            f.write(''.join(np.ravel(i,order='F')))
-    
-    return char_written_length
-        
-
-
 # code for creation of state array and performing encryption on all blocks of the cipher created
 def creation_everything():
     filename= input("enter the name of the file with path that need to be encrypted")
@@ -241,11 +239,16 @@ def creation_everything():
         state_array_out[index]= final_encryption(np.copy(block),expanded_key)
     
     total_char_wrote= storeOutput(OutFileName,np.copy(state_array_out))
-    print(total_char_wrote)
+
+    return np.array_equal(decryp.encrypted_text_read(OutFileName),state_array_out), total_char_wrote
+    # below code should only be used for debugging purpose (and before return) as it tells that whether array written to the output file
+    # is same as the array read again from the output file
+    #print(decryp.encrypted_text_read(OutFileName),"   \n",state_array_out)
 
     
 if __name__=='__main__':
 
-    creation_everything()
+    status,total_char_wrote= creation_everything()
+    print(status," ",total_char_wrote)
 
     
