@@ -1,6 +1,7 @@
-import Aes_encryption
 import numpy as np
 import math
+import Aes_encryption as encryp
+
 
 # most of the lambdas and short methods are here
 

@@ -21,7 +21,7 @@ for i in range(4):              # this is the loop to conver the 'rotconst' into
  
 # Sbox creation for the Gf(2^8)
 
-sbox =  [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
+s_box =  np.array([0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
          0x2b, 0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59,
          0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7,
          0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1,
@@ -44,15 +44,15 @@ sbox =  [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
          0x86, 0xc1, 0x1d, 0x9e, 0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e,
          0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 0x8c, 0xa1,
          0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0,
-         0x54, 0xbb, 0x16]
-                                         # this representation is in hexadecimal format so while printing it we wil get corresponding integers
-
-s_box=np.array(sbox).reshape(16,16)                              
-                                         # converting the sbox list into a numpy array of 16x16
+         0x54, 0xbb, 0x16],dtype=np.uint8)
+                                         # this representation is in hexadecimal format so while printing it, we wil get corresponding integers
 
 # most of the lambdas and one liner functions are here
 
 shift = lambda r,Nb: (1 if r== 1 else (2 if r == 2 else (3 if r== 3 else (0 if r==0 else None)))) if Nb == 4 else None
+
+byte_substitution= np.vectorize(lambda index: s_box[index])
+                                         # a copy of state_array or array for which subtitution is required should be passed in it.
 
 # methods are all here
 # comment for any line of code is listed just below that line at a suitable distance
@@ -77,29 +77,6 @@ def input_text(filename):
                                                                         # here each element of the 'state_array' will represent a state array 
                                                                         # for the given text.
 
-# first four and last four bit integer value of a passed integer
-
-def first_last_four(num8):
-    first_four= last_four= 0
-    for i in range(4):
-        last_four+= num8%2*math.pow(2,i)
-        num8= num8//2
-                                             # to have the integer remainder of num8 variable
-            
-    for i in range(4):
-        first_four+= num8%2*math.pow(2,i)
-        num8= num8//2
-                                             
-    return s_box[int(first_four)][int(last_four)]
-                                            # this will return the substitute byte or the number from the table 's_box'
-
-vectorized_first_last_four= np.vectorize(first_last_four)    
-                                             # this will create the vectorize version of the "firs_last_four" function for numpy array
-    
-# this is to design a method for the Byte_substitution step as done in the above cell so above cell code can be omitted safely deleted
-def byte_substitution(state_array_copy):
-    
-    return vectorized_first_last_four(state_array_copy)
 
 
 def input_text_key(filename):
@@ -190,8 +167,8 @@ def multiplication_for_matrix(X,Y):
     Y[:,:]=rough[:,:]
                 
 
-def add_round_key(cipher,round_no,expanded_key):
-    cipher[:,:]= cipher[:,:]^expanded_key[round_no,:,:]
+def add_round_key(cipher,expanded_key):
+    cipher[:,:]= cipher[:,:]^expanded_key[:,:]
     
 def storeOutput(filename,state_array_out):
     char_written_length=0
@@ -206,19 +183,24 @@ def storeOutput(filename,state_array_out):
 
 # only the block of cipher should be passed that need to be ecrypted and not the whole cipher,containing all the blocks of the cipher
 def final_encryption(cipher_input,expanded_key):
-    add_round_key(cipher_input,0,expanded_key)
+    round_number= 0
+    add_round_key(cipher_input,expanded_key[round_number,:,:])
                                  # this has been done because 0 round_key should be added before any processing of the input cipher
     for round_number in range(1,10):
         cipher_input= byte_substitution(cipher_input)
         shiftrows(cipher_input)
         multiplication_for_matrix(mixcolumn_const,cipher_input)
-        add_round_key(cipher_input,round_number,expanded_key)
+        add_round_key(cipher_input,expanded_key[round_number,:,:])
+                                 # one more thing that can be done here is that passing only the necessary part of the 
+                                 # expanded_key with no passing of round number is needed then(also round_number variable
+                                 # should also be used in passing the expanded_key as follows expanded_key[round_number,:,:])
 
                                 # above is the process for the round 1 to round 9
 
     cipher_input= byte_substitution(cipher_input)
     shiftrows(cipher_input)
-    add_round_key(cipher_input,10,expanded_key)
+    round_number= 10
+    add_round_key(cipher_input,expanded_key[round_number,:,:])
 
                                 # above is the process for the round 10 only
 
