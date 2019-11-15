@@ -55,7 +55,7 @@ byte_substitution= np.vectorize(lambda index: s_box[index])
                                              # a copy of state_array or array for which subtitution is required should be passed in it.
 
 # calculating the value of x^i for where x = 2 in decimal and the multiplication is abiding the rules of galois field 2^8
-lefShift_xor= lambda x : (x<<1) if (x<<1)<=128 else np.uint8(x<<1)^27
+lefShift_xor= lambda x : np.uint8(x<<1) if (x<128) else np.uint8(x<<1)^27
                                              # this is equivalent to multiply a number here 'x' with 2 in galois field 2^8
                                              # here i use np.uint8 because python integer is not of 8-bit and bit shift wouldn't work 
                                              # correctly and that is it would drop the bit shifted after 8 bits positions
