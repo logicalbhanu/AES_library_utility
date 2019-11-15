@@ -5,12 +5,12 @@ import Aes_decryption as decryp
 # import file1
 
 
-Nb=Nk=4                         # here Nb is the number of columns(32 bit words) in the state arrary and Nk is the number of columns
+Nb=Nk=np.uint8(4)                         # here Nb is the number of columns(32 bit words) in the state arrary and Nk is the number of columns
                                 # (32 bit words) in key array, Nk could be 4,6,8 but for this case it is 4
 
-Nr=10                           # Nr is the number of rounds which is a funciton of Nk and Nb (which is fixed). for this standard Nr = 10
+Nr=np.uint8(10)                           # Nr is the number of rounds which is a funciton of Nk and Nb (which is fixed). for this standard Nr = 10
 
-mixcolumn_const=np.array([2,3,1,1,1,2,3,1,1,1,2,3,3,1,1,2])
+mixcolumn_const=np.array([2,3,1,1,1,2,3,1,1,1,2,3,3,1,1,2],dtype=np.uint8)
 mixcolumn_const=np.reshape(mixcolumn_const,(4,4))
 
 rotconst=np.zeros((1,4,4),dtype=np.uint8)
@@ -45,14 +45,20 @@ s_box =  np.array([0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0
          0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 0x8c, 0xa1,
          0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0,
          0x54, 0xbb, 0x16],dtype=np.uint8)
-                                         # this representation is in hexadecimal format so while printing it, we wil get corresponding integers
+                                             # this representation is in hexadecimal format so while printing it, we wil get corresponding integers
 
 # most of the lambdas and one liner functions are here
 
 shift = lambda r,Nb: (1 if r== 1 else (2 if r == 2 else (3 if r== 3 else (0 if r==0 else None)))) if Nb == 4 else None
 
 byte_substitution= np.vectorize(lambda index: s_box[index])
-                                         # a copy of state_array or array for which subtitution is required should be passed in it.
+                                             # a copy of state_array or array for which subtitution is required should be passed in it.
+
+# calculating the value of x^i for where x = 2 in decimal and the multiplication is abiding the rules of galois field 2^8
+lefShift_xor= lambda x : (x<<1) if (x<<1)<=128 else np.uint8(x<<1)^27
+                                             # this is equivalent to multiply a number here 'x' with 2 in galois field 2^8
+                                             # here i use np.uint8 because python integer is not of 8-bit and bit shift wouldn't work 
+                                             # correctly and that is it would drop the bit shifted after 8 bits positions
 
 # methods are all here
 # comment for any line of code is listed just below that line at a suitable distance
@@ -108,15 +114,9 @@ def rotkey(roundkey):              # this is the method for applying the left ro
                                    # since the rotconst can be used to left rotate a given matrix element column wise hence we apply
                                    # multiplication of the 'roundkey' with rotconst(specifically rotconst with roundkey)
 
-# calculating the value of x^i for where x = 2 in decimal and the multiplication is abiding the rules of galois field 2^8
-lefShift_xor= lambda x : (x<<1) if (x<<1)<=128 else np.uint8(x<<1)^27
-                                             # this is equivalent to multiply a number here 'x' with 2 in galois field 2^8
-                                             # here i use np.uint8 because python integer is not of 8-bit and bit shift wouldn't work 
-                                             # correctly and that is it would drop the bit shifted after 8 bits positions
-
 
 def round_constant(i):
-    roundconstant= 1
+    roundconstant= np.uint8(1)
     for j in range(2,i+1):
                                              # use i because while calling the round_constant function, index of the array is used 
                                              # and which is equal to the round number itself and we want one less than round number as
@@ -145,8 +145,10 @@ def shiftrows(element):
     temp = np.zeros(element.shape,dtype=np.uint8)
     for r in range(4):
         for j in range(Nb):
-            temp[i,(Nb-shift(r,Nb)+j)%Nb]= element[r,j]
-    element=np.copy(temp)
+            temp[r,(Nb-shift(r,Nb)+j)%Nb]= element[r,j]
+    element[:,:]=np.copy(temp)
+                    #  don't panic about assignment to value of 'element' reference as it is working absloutely fine, moreover remember that
+                    # list are immutable and that they are called by reference in functions and not called by value
 
     
 def multiplication_for_matrix(X,Y):
@@ -191,7 +193,7 @@ def final_encryption(cipher_input,expanded_key):
         shiftrows(cipher_input)
         multiplication_for_matrix(mixcolumn_const,cipher_input)
         add_round_key(cipher_input,expanded_key[round_number,:,:])
-                                 # one more thing that can be done here is that passing only the necessary part of the 
+                                 # one more thing that has been done here is that passing only the necessary part of the 
                                  # expanded_key with no passing of round number is needed then(also round_number variable
                                  # should also be used in passing the expanded_key as follows expanded_key[round_number,:,:])
 
