@@ -63,7 +63,7 @@ def invshiftrows(element):
     for r in range(4):
         for j in range(Nb):
             temp[r,(encryp.shift(r,Nb)+j)%Nb]= element[r,j]
-    element=np.copy(temp)
+    element[:,:]=np.copy(temp)
                     #  don't panic about assignment to value of 'element' reference as it is working absloutely fine, moreover remember that
                     # list are immutable and that they are called by reference in functions and not called by value
 
@@ -87,19 +87,19 @@ def inverse_multiplication_for_matrix(X,Y):
                 if X[i,k]== 9:
                     a=Y[k,j]
                     a= encryp.lefShift_xor(a);a= encryp.lefShift_xor(a);a= encryp.lefShift_xor(a)
-                    rough[i,j] = rough[i,j]^(a^encryp.lefShift_xor(Y[k,j]))
+                    rough[i,j] = rough[i,j]^(a^Y[k,j])
                     
                 if X[i,k]== 13:
                     a=b=Y[k,j]
                     a= encryp.lefShift_xor(a);a= encryp.lefShift_xor(a);a= encryp.lefShift_xor(a)
                     b= encryp.lefShift_xor(b);b= encryp.lefShift_xor(b)
-                    rough[i,j] = rough[i,j]^(a^b^encryp.lefShift_xor(Y[k,j]))
+                    rough[i,j] = rough[i,j]^(a^b^Y[k,j])
                 
                 if X[i,k]==11:
                     a=b=Y[k,j]
                     a= encryp.lefShift_xor(a);a= encryp.lefShift_xor(a);a= encryp.lefShift_xor(a)
                     b= encryp.lefShift_xor(b)
-                    rough[i,j] = rough[i,j]^(a^b^encryp.lefShift_xor(Y[k,j]))
+                    rough[i,j] = rough[i,j]^(a^b^Y[k,j])
                                         
     Y[:,:]=rough[:,:]
 
@@ -132,7 +132,7 @@ def final_decryption(cipher_input,expanded_key):
 
                                  # above is the process for the round 9 to round 1
 
-    round_number= 10
+    round_number= 0
     invshiftrows(cipher_input)
     cipher_input= inverse_byte_substitution(cipher_input)
     encryp.add_round_key(cipher_input,expanded_key[round_number,:,:])
@@ -156,6 +156,8 @@ def creation_everything():
         state_array_out[index]= final_decryption(np.copy(block),expanded_key)
     
     total_char_wrote= storeOutput(OutFileName,np.copy(state_array_out))
+    print(state_array_out)  # for debugging purouse only
+    print(encryp.input_text(OutFileName))  # for debugging purouse only
 
     return np.array_equal(encryp.input_text(OutFileName),state_array_out), total_char_wrote
 
