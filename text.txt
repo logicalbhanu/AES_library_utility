@@ -1,0 +1,78 @@
+
+Overview
+
+'pyenv' has the feature to set the 'local' and the 'global' version,
+
+where 'local' is the version that we set for a particular directory and it automatically gets activated if you are in that directory or any of its subdirectory(if another 'local' is not set for that subdirectory) in a hierarchical fashion.
+
+whereas 'global' is the version that we set for all over the system and it is available to any directory(if the local is not set for that directory otherwise the local version would be available in that directory)
+
+How to set 'global' and 'local'
+
+now to set 'global' or the 'local' version of the python, that python version should be installed in your system, be it by the 'os' you used or by the 'pyenv'. And there is no need of virtual environment creation at all.
+
+To Install any version via 'pyenv'
+
+see the output of 
+pyenv install --list
+choose one of the name(eg. 3.6.0) and use command 
+`pyenv install <version-name>`
+and to uninstall use
+pyenv uninstall <version-name>
+
+To update pyenv
+pyenv update
+
+Note that the version of python that is installed by the os is called 'system' by the 'pyenv' and the versions that are installed by the 'pyenv' would be represented by the version number of that python version. to see all the versions installed by the pyenv use "pyenv versions"
+
+Now coming to the question of how to set the global version and the local version, use
+
+pyenv global <version-name-as used-by-pyenv> (the version has to be installed) to set the global version
+
+and for setting the local python, first, move to the directory in which you want to set the local version, and then
+
+pyenv local <version-name-as used-by-pyenv>
+
+and to unset the local use the command 
+pyenv local --unset
+
+
+Issue that I faced in ubuntu 20.04, and in Linux mint 20
+
+Now sometimes the 'system' python is not accessible due to its unreachability by 'pyenv' and the reason is well explained by @ivan_pozdeev, but I would like to address the wired issue that I face in ubuntu 20.04 and Linux mint 20(as it's based on ubuntu 20.04).
+
+Here I am not able to access the system python, even though the system python binaries are well in the path of pyenv.
+
+the error was pyenv: system version not found in PATH
+
+reason: the 'system' is not found by the pyenv, because pyenv was looking for binaries with name 'python' and not 'python3' in the path(which is '/usr/bin'), and in ubuntu 20.04 the python binaries are addressed with name 'python3', and not with 'python'
+
+solution: the solution is to create the symlink for 'python3' named as 'python' in '/usr/bin' and the command used is sudo ln -s /usr/bin/python3 /usr/bin/python
+
+
+from here a combo of pipenv and pyenv
+
+once we set the local version of python by pyenv then after that the command 
+'pipenv shell'
+will create and activate the python virtual environment in that folder, though the pipenv stores all the files of every virtual environment in a different folder.
+
+to install any package in that environment use the command
+pipenv install package-name
+
+to display all the packet install in the virtual environment use
+pipenv lock -r
+
+to display the dependency graph use the command 
+pipenv graph 
+
+to exit the virtual environment use the command 
+exit
+
+to uninstall any package in that environment use the command
+pipenv uninstall package-name
+
+to delete the virtual environment in the folder, move to the folder and use the command
+pipenv --rm  (no need to activate the environment)
+
+see 'pipenv --help' command output
+
